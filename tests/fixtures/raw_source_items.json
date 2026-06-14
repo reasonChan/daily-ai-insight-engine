@@ -1,0 +1,68 @@
+{
+  "items": [
+    {
+      "id": "fixture-openai-001",
+      "source_type": "official",
+      "medium_type": "blog",
+      "source_name": "OpenAI Blog",
+      "source_url": "https://example.com/openai-agent-update",
+      "title": "OpenAI announces new agent tooling for developers",
+      "summary": "OpenAI describes new agent workflows and evaluation tooling.",
+      "content": "OpenAI announced agent tooling for developers building LLM applications. The update focuses on evaluations, safety checks, and production monitoring for generative AI systems.",
+      "language": "en",
+      "published_at": "2026-06-10T08:00:00Z",
+      "collected_at": "2026-06-14T02:00:00Z",
+      "authors": ["OpenAI"],
+      "tags": ["agent", "LLM"],
+      "raw_payload": {"fixture": true}
+    },
+    {
+      "id": "fixture-hn-001",
+      "source_type": "aggregator",
+      "medium_type": "ranking_item",
+      "source_name": "Hacker News",
+      "source_url": "https://news.ycombinator.com/item?id=123",
+      "title": "Developers debate Claude and Gemini coding workflows",
+      "summary": "A ranking item about AI coding assistants and practical model tradeoffs.",
+      "content": "The discussion compares Claude, Gemini, and local LLM tools for code review, agent planning, and daily software engineering work.",
+      "language": "en",
+      "published_at": "2026-06-11T09:30:00Z",
+      "collected_at": "2026-06-14T02:01:00Z",
+      "authors": [],
+      "tags": ["Claude", "Gemini"],
+      "raw_payload": {"points": 180, "comments": 45}
+    },
+    {
+      "id": "fixture-general-001",
+      "source_type": "tech_media",
+      "medium_type": "article",
+      "source_name": "Example Tech",
+      "source_url": "https://example.com/phone-case-colors",
+      "title": "A phone company updates its case colors",
+      "summary": "A consumer hardware note about accessory colors.",
+      "content": "The company added two case colors and refreshed its accessories page.",
+      "language": "en",
+      "published_at": "2026-06-09T12:00:00Z",
+      "collected_at": "2026-06-14T02:02:00Z",
+      "authors": ["Reporter"],
+      "tags": ["hardware"],
+      "raw_payload": {"fixture": true}
+    },
+    {
+      "id": "fixture-openai-duplicate",
+      "source_type": "official",
+      "medium_type": "blog",
+      "source_name": "OpenAI Blog",
+      "source_url": "https://example.com/openai-agent-update/",
+      "title": "OpenAI announces new agent tooling for developers",
+      "summary": "Duplicate item with the same normalized title and URL.",
+      "content": "OpenAI announced agent tooling for developers building LLM applications.",
+      "language": "en",
+      "published_at": "2026-06-10T08:00:00Z",
+      "collected_at": "2026-06-14T02:03:00Z",
+      "authors": ["OpenAI"],
+      "tags": ["agent"],
+      "raw_payload": {"duplicate": true}
+    }
+  ]
+}

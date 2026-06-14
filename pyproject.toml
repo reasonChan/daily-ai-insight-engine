@@ -1,0 +1,18 @@
+[project]
+name = "daily-ai-insight-engine"
+version = "0.1.0"
+description = "Local AI insight collection, metadata storage, and RAG ingestion MVP."
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic>=2.0",
+  "PyYAML>=6.0",
+  "fastapi>=0.111",
+  "uvicorn[standard]>=0.30",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0", "httpx>=0.27"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

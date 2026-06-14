@@ -1,0 +1,96 @@
+sources:
+  - name: TechCrunch AI
+    type: tech_media
+    medium: article
+    method: rss
+    url: https://techcrunch.com/tag/artificial-intelligence/feed/
+    language: en
+    enabled: true
+
+  - name: The Verge AI
+    type: tech_media
+    medium: article
+    method: rss
+    url: https://www.theverge.com/rss/ai-artificial-intelligence/index.xml
+    language: en
+    enabled: true
+
+  - name: MIT Technology Review AI
+    type: tech_media
+    medium: article
+    method: rss
+    url: https://www.technologyreview.com/feed/
+    language: en
+    enabled: true
+
+  - name: OpenAI Blog
+    type: official
+    medium: blog
+    method: rss
+    url: https://openai.com/news/rss.xml
+    language: en
+    enabled: true
+
+  - name: Google DeepMind Blog
+    type: official
+    medium: blog
+    method: rss
+    url: https://deepmind.google/blog/rss.xml
+    language: en
+    enabled: true
+
+  - name: arXiv AI
+    type: official
+    medium: paper
+    method: api
+    query: cat:cs.AI OR cat:cs.CL OR cat:cs.LG
+    language: en
+    enabled: true
+
+  - name: Hacker News AI
+    type: aggregator
+    medium: ranking_item
+    method: api
+    query: AI OR LLM OR OpenAI OR Claude OR agents
+    language: en
+    enabled: true
+
+  - name: Google News AI
+    type: aggregator
+    medium: ranking_item
+    method: rss
+    query: artificial intelligence
+    language: en
+    enabled: true
+
+  - name: Google News AI 中文
+    type: aggregator
+    medium: ranking_item
+    method: rss
+    url: https://news.google.com/rss/search?q=%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20OR%20%E5%A4%A7%E6%A8%A1%E5%9E%8B%20OR%20%E7%94%9F%E6%88%90%E5%BC%8FAI&hl=zh-CN&gl=CN&ceid=CN:zh-Hans
+    language: zh
+    enabled: true
+
+  - name: 机器之心
+    type: tech_media
+    medium: article
+    method: rss
+    url: https://www.jiqizhixin.com/rss
+    language: zh
+    enabled: true
+
+  - name: Reddit LocalLLaMA
+    type: social
+    medium: discussion
+    method: json
+    url: https://www.reddit.com/r/LocalLLaMA/top.json
+    language: en
+    enabled: true
+
+  - name: Reddit MachineLearning
+    type: social
+    medium: discussion
+    method: json
+    url: https://www.reddit.com/r/MachineLearning/top.json
+    language: en
+    enabled: true

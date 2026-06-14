@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.pytest-tmp*/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Local data and generated artifacts
+data/
+reports/daily/*.json
+reports/daily/*.md
+
+# Environment and local secrets
+.env
+.env.*
+*.local
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
