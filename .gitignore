@@ -10,6 +10,7 @@ frontend/dist/
 
 # Local data and generated artifacts
 data/
+logs/
 reports/daily/*.json
 reports/daily/*.md
 

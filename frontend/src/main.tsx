@@ -396,8 +396,9 @@ function DailyAnalysisView({ analysis }: { analysis: DailyAnalysis | null }) {
             <div className="hotTopic" key={`${topic.rank}-${topic.title}`}>
               <strong>{topic.rank}</strong>
               <div>
-                <h3>{topic.title}</h3>
-                <p>{topic.reason}</p>
+                <h3>{hotTopicHeadline(topic)}</h3>
+                <p>{hotTopicReason(topic)}</p>
+                <p className="originalTitle">原始标题：{topic.title}</p>
                 <small>
                   {categoryLabel(topic.category)} / 热度 {formatScore(topic.hot_score)} / 证据 {topic.evidence_source_item_ids.length}
                 </small>
@@ -418,9 +419,9 @@ function DailyAnalysisView({ analysis }: { analysis: DailyAnalysis | null }) {
         <div className="stack">
           {analysis.deep_dives.map((dive) => (
             <div className="analysisCard" key={dive.event_id}>
-              <h3>{dive.title}</h3>
-              <p>{dive.background}</p>
-              <p>{dive.impact_analysis}</p>
+              <h3>{deepDiveHeadline(dive)}</h3>
+              <p>{deepDiveSummary(dive)}</p>
+              <p className="originalTitle">原始标题：{dive.title}</p>
               <small>置信度 {formatScore(dive.confidence)} / 证据 {dive.evidence_source_item_ids.length}</small>
             </div>
           ))}
@@ -440,8 +441,8 @@ function DailyAnalysisView({ analysis }: { analysis: DailyAnalysis | null }) {
           {analysis.trend_judgments.map((trend) => (
             <div className="analysisCard" key={trend.direction}>
               <h3>{trendDirectionLabel(trend.direction)}</h3>
-              <p>{trend.judgment}</p>
-              <p>{trend.logic}</p>
+              <p>{trendSummary(trend)}</p>
+              <p>{trendLogic(trend)}</p>
               <small>
                 强度 {formatScore(trend.signal_strength)} / 置信度 {formatScore(trend.confidence)}
               </small>
@@ -462,8 +463,8 @@ function DailyAnalysisView({ analysis }: { analysis: DailyAnalysis | null }) {
           {analysis.risk_opportunity_notes.map((note, index) => (
             <div className={note.type === "risk" ? "noteCard riskNote" : "noteCard opportunityNote"} key={`${note.type}-${index}`}>
               <span>{note.type === "risk" ? "风险" : "机会"}</span>
-              <h3>{note.title}</h3>
-              <p>{note.rationale}</p>
+              <h3>{noteHeadline(note)}</h3>
+              <p>{noteRationale(note)}</p>
               <small>优先级 {formatScore(note.priority)}</small>
             </div>
           ))}
@@ -570,13 +571,100 @@ function chineseExecutiveSummary(report: Report, events: EventItem[]) {
   const eventCount = topEvents.length || events.length;
   const riskCount = report.risk_alerts?.length ?? 0;
   const sourceTotal = Object.values(report.source_breakdown ?? {}).reduce((sum, count) => sum + count, 0);
-  const topTitle = report.daily_analysis?.hot_topics[0]?.title ?? topEvents[0]?.title;
   const date = report.report_date ? `${report.report_date} ` : "";
+  const hotTopics = report.daily_analysis?.hot_topics ?? [];
+  const trends = report.daily_analysis?.trend_judgments ?? [];
+  const categories = Array.from(new Set(hotTopics.map((topic) => categoryLabel(topic.category)))).slice(0, 3);
+  const trendNames = trends.map((trend) => trendDirectionLabel(trend.direction)).slice(0, 4);
   const sourceText = sourceTotal ? `共跟踪 ${sourceTotal} 条来源信息` : "已完成来源信息汇总";
   const eventText = `筛选出 ${eventCount} 个重点事件`;
   const riskText = riskCount ? `其中 ${riskCount} 个需要重点关注的风险预警` : "暂无高风险预警";
-  const topText = topTitle ? `重点信号为：${topTitle}` : "暂无重点事件。";
-  return `${date}${sourceText}，${eventText}，${riskText}。${topText}`;
+  const categoryText = categories.length ? `热点主要集中在${categories.join("、")}方向` : "热点方向暂不明显";
+  const trendText = trendNames.length ? `趋势判断覆盖${trendNames.join("、")}` : "暂未形成稳定趋势判断";
+  return `${date}${sourceText}，${eventText}，${categoryText}；${trendText}；${riskText}。`;
+}
+
+function hotTopicHeadline(topic: HotTopic) {
+  const entities = extractEntities(topic.reason);
+  const subject = entities.length ? entities.slice(0, 3).join("、") : categoryLabel(topic.category);
+  return `${categoryLabel(topic.category)}热点：${subject}相关信号升温`;
+}
+
+function hotTopicReason(topic: HotTopic) {
+  const metrics = extractRankMetrics(topic.reason);
+  const parts = [
+    `重要性 ${formatScore(metrics.importance ?? topic.importance_score)}`,
+    `风险 ${formatScore(metrics.risk)}`,
+    `来源覆盖 ${metrics.coverage ?? topic.evidence_source_item_ids.length} 条`,
+  ];
+  const entities = extractEntities(topic.reason);
+  if (entities.length) {
+    parts.push(`涉及 ${entities.slice(0, 4).join("、")}`);
+  }
+  return `入选逻辑：${parts.join("，")}。该事件在今日结构化信号中排序靠前，适合纳入日报重点观察。`;
+}
+
+function deepDiveHeadline(dive: EventDeepDive) {
+  const entities = dive.affected_entities.slice(0, 3);
+  return entities.length ? `关键事件：${entities.join("、")}相关影响` : "关键事件：需重点关注的 AI 行业信号";
+}
+
+function deepDiveSummary(dive: EventDeepDive) {
+  const entityText = dive.affected_entities.length ? `影响对象包括 ${dive.affected_entities.slice(0, 4).join("、")}` : "影响对象仍需结合后续来源验证";
+  return `背景与影响：该事件被纳入深度总结，是因为它关联 ${dive.evidence_source_item_ids.length} 条证据来源，${entityText}。当前置信度为 ${formatScore(dive.confidence)}，建议结合原始标题和来源内容继续复核。`;
+}
+
+function trendSummary(trend: TrendJudgment) {
+  return `${trendDirectionLabel(trend.direction)}出现可观察信号，当前信号强度为 ${formatScore(trend.signal_strength)}，置信度为 ${formatScore(trend.confidence)}。`;
+}
+
+function trendLogic(trend: TrendJudgment) {
+  const count = extractNumberBefore(trend.logic, "event");
+  const avgImportance = extractMetric(trend.logic, "avg_importance");
+  const maxRisk = extractMetric(trend.logic, "max_risk");
+  const parts = [
+    count ? `关联 ${count} 个事件` : `关联 ${trend.supporting_event_ids.length} 个事件`,
+    `平均重要性 ${formatScore(avgImportance)}`,
+    `最高风险 ${formatScore(maxRisk)}`,
+    `证据来源 ${trend.evidence_source_item_ids.length} 条`,
+  ];
+  return `判断依据：${parts.join("，")}。`;
+}
+
+function noteHeadline(note: RiskOpportunityNote) {
+  return note.type === "risk" ? "需要关注的潜在风险" : "值得跟踪的机会信号";
+}
+
+function noteRationale(note: RiskOpportunityNote) {
+  const prefix = note.type === "risk" ? "风险依据" : "机会依据";
+  return `${prefix}：关联 ${note.related_event_ids.length} 个事件、${note.evidence_source_item_ids.length} 条证据，优先级 ${formatScore(note.priority)}。建议查看对应原始来源确认细节。`;
+}
+
+function extractRankMetrics(reason: string) {
+  return {
+    importance: extractMetric(reason, "importance"),
+    risk: extractMetric(reason, "risk"),
+    coverage: extractMetric(reason, "source_coverage"),
+  };
+}
+
+function extractMetric(text: string, key: string) {
+  const match = text.match(new RegExp(`${key}=([0-9.]+)`));
+  return match ? Number(match[1]) : undefined;
+}
+
+function extractNumberBefore(text: string, word: string) {
+  const match = text.match(new RegExp(`([0-9]+)\\s+${word}`));
+  return match ? Number(match[1]) : undefined;
+}
+
+function extractEntities(reason: string) {
+  const match = reason.match(/entities=([^.;]+)/);
+  if (!match) return [];
+  return match[1]
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 function statusLabel(status: string | undefined, loading: boolean) {

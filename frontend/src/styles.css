@@ -444,6 +444,12 @@ h2 {
   line-height: 1.55;
 }
 
+.originalTitle {
+  color: #667381;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .rawData pre {
   max-height: 260px;
   overflow: auto;
