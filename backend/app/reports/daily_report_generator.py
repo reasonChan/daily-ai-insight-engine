@@ -8,6 +8,7 @@ from typing import Any
 
 from backend.app.schemas.analysis import DailyReport, Event, Insight, RiskAssessment
 from backend.app.schemas.daily_analysis import DailyAnalysis
+from backend.app.schemas.daily_article import DailyArticle
 from backend.app.schemas.source import RawSourceItem
 
 
@@ -21,6 +22,7 @@ class DailyReportGenerator:
         source_items: list[RawSourceItem],
         summary: dict[str, Any],
         daily_analysis: DailyAnalysis | None = None,
+        daily_article: DailyArticle | None = None,
         output_dir: str | Path = "reports/daily",
     ) -> DailyReport:
         output_dir = Path(output_dir)
@@ -35,6 +37,7 @@ class DailyReportGenerator:
             "insights": [insight.model_dump(mode="json") for insight in insights],
             "risk_alerts": [risk.model_dump(mode="json") for risk in risk_alerts],
             "daily_analysis": daily_analysis.model_dump(mode="json") if daily_analysis else None,
+            "daily_article": daily_article.model_dump(mode="json") if daily_article else None,
             "source_breakdown": dict(Counter(item.source_type for item in source_items)),
             "failed_sources": summary.get("failed_sources", []),
             "notable_source_items": [_source_payload(item) for item in source_items],
@@ -61,8 +64,8 @@ class DailyReportGenerator:
 
 def _executive_summary(events: list[Event], risk_alerts: list[RiskAssessment]) -> str:
     if not events:
-        return "No AI-related events were found for this report date."
-    return f"Tracked {len(events)} AI-related event(s), with {len(risk_alerts)} risk alert(s). Top signal: {events[0].title}"
+        return "本期没有发现可用于生成日报的 AI 相关事件。"
+    return f"本期共识别 {len(events)} 个 AI 相关事件，其中 {len(risk_alerts)} 个进入风险预警；最高权重信号为：{events[0].title}"
 
 
 def _source_payload(item: RawSourceItem) -> dict[str, Any]:
@@ -78,16 +81,24 @@ def _source_payload(item: RawSourceItem) -> dict[str, Any]:
 
 
 def _render_markdown(payload: dict[str, Any]) -> str:
+    article = payload.get("daily_article")
     lines = [
-        f"# Daily AI Insight Report - {payload['report_date']}",
+        f"# {article['title'] if article else 'Daily AI Insight Report - ' + payload['report_date']}",
         "",
+    ]
+    if article:
+        if article.get("subtitle"):
+            lines.extend([article["subtitle"], ""])
+        lines.extend(_render_daily_article(article))
+        lines.extend(["", "---", "", "## 结构化附录", ""])
+    lines.extend([
         "## Executive Summary",
         "",
         payload["executive_summary"],
         "",
         "## Top Events",
         "",
-    ]
+    ])
     for event in payload["top_events"]:
         source_ids = ", ".join(event["related_source_item_ids"])
         lines.extend([f"- **{event['title']}** ({event['category']}, importance {event['importance_score']})", f"  Source items: {source_ids}"])
@@ -118,8 +129,40 @@ def _render_markdown(payload: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _render_daily_article(article: dict[str, Any]) -> list[str]:
+    lines = [
+        "## 今日主线",
+        "",
+        article["lead"],
+        "",
+    ]
+    for section in article.get("body_sections") or []:
+        lines.extend(
+            [
+                f"## {section['heading']}",
+                "",
+                section["content"],
+                "",
+            ]
+        )
+    lines.extend(
+        [
+            "## 趋势判断",
+            "",
+            article["trend_outlook"],
+            "",
+            "## 风险与机会",
+            "",
+            article["risk_opportunity"],
+            "",
+            f"证据来源：{', '.join(article.get('evidence_source_item_ids') or [])}",
+        ]
+    )
+    return lines
+
+
 def _render_daily_analysis(analysis: dict[str, Any]) -> list[str]:
-    lines = ["", "## 今日AI领域主要热点", ""]
+    lines = ["", "## 今日 AI 领域主要热点", ""]
     hot_topics = analysis.get("hot_topics") or []
     if hot_topics:
         for topic in hot_topics:

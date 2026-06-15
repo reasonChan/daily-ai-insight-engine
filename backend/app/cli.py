@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from backend.app.agents import DailyAnalysisAgent, EventExtractionAgent, InsightAnalysisAgent, RiskAssessmentAgent
+from backend.app.agents import DailyAnalysisAgent, DailyNarrativeAgent, EventExtractionAgent, InsightAnalysisAgent, RiskAssessmentAgent
 from backend.app.rag import chunk_source_item, write_chunks
 from backend.app.reports import DailyReportGenerator
 from backend.app.schemas.analysis import PipelineRun
@@ -200,6 +200,14 @@ def run_analysis_report_pipeline(
         risks=risks,
         source_items=items,
     )
+    daily_article = DailyNarrativeAgent().write(
+        report_date=report_date,
+        events=events,
+        insights=insights,
+        risks=risks,
+        source_items=items,
+        daily_analysis=daily_analysis,
+    )
     report = DailyReportGenerator().generate(
         report_date=report_date,
         events=events,
@@ -208,6 +216,7 @@ def run_analysis_report_pipeline(
         source_items=items,
         summary=summary,
         daily_analysis=daily_analysis,
+        daily_article=daily_article,
         output_dir=report_dir,
     )
 

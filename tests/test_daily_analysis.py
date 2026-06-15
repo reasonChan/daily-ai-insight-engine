@@ -78,7 +78,12 @@ def test_daily_report_pipeline_writes_daily_analysis_sections(tmp_path):
     assert payload["daily_analysis"]["trend_judgments"]
     assert payload["daily_analysis"]["risk_opportunity_notes"]
     assert payload["daily_analysis"]["hot_topics"][0]["evidence_source_item_ids"]
-    assert "今日AI领域主要热点" in markdown
+    assert payload["daily_article"]["title"]
+    assert payload["daily_article"]["lead"]
+    assert payload["daily_article"]["body_sections"]
+    assert payload["daily_article"]["evidence_source_item_ids"]
+    assert "今日主线" in markdown
+    assert "今日 AI 领域主要热点" in markdown
     assert "重要事件深度总结" in markdown
     assert "趋势判断" in markdown
     assert "风险与机会提示" in markdown

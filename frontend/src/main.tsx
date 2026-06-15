@@ -99,12 +99,32 @@ type DailyAnalysis = {
   generated_at: string;
 };
 
+type DailyArticleSection = {
+  heading: string;
+  content: string;
+  related_event_ids: string[];
+  evidence_source_item_ids: string[];
+};
+
+type DailyArticle = {
+  title: string;
+  subtitle?: string | null;
+  lead: string;
+  body_sections: DailyArticleSection[];
+  trend_outlook: string;
+  risk_opportunity: string;
+  evidence_source_item_ids: string[];
+  generated_by: string;
+  generated_at: string;
+};
+
 type Report = {
   report_date?: string;
   executive_summary?: string;
   top_events?: EventItem[];
   risk_alerts?: Array<Record<string, unknown>>;
   daily_analysis?: DailyAnalysis | null;
+  daily_article?: DailyArticle | null;
   notable_source_items?: Array<{ id: string; language?: string }>;
   source_breakdown?: Record<string, number>;
   failed_sources?: Array<{ source_name?: string; reason?: string } | string>;
@@ -211,28 +231,7 @@ function App() {
       </section>
 
       <section className="workspace">
-        <article className="panel reportPanel">
-          <div className="panelHeader">
-            <div>
-              <p className="eyebrow">最新日报</p>
-              <h2>{report?.report_date ?? "暂无日报"}</h2>
-            </div>
-            <span className="pill">{report?.generated_at ? formatDate(report.generated_at) : "等待生成"}</span>
-          </div>
-          <p className="summary">{report ? chineseExecutiveSummary(report, events) : "生成日报后，这里会展示中文汇总。"}</p>
-          <div className="breakdown">
-            {Object.entries(report?.source_breakdown ?? {}).map(([name, count]) => (
-              <span key={name}>
-                {sourceTypeLabel(name)}：<strong>{count}</strong>
-              </span>
-            ))}
-            {Object.entries(languageBreakdown).map(([name, count]) => (
-              <span key={name}>
-                {name}来源：<strong>{count}</strong>
-              </span>
-            ))}
-          </div>
-        </article>
+        <DailyArticleView report={report} events={events} languageBreakdown={languageBreakdown} />
 
         <article className="panel">
           <div className="panelHeader">
@@ -363,6 +362,115 @@ function App() {
         </div>
       </section>
     </main>
+  );
+}
+
+function DailyArticleView({
+  report,
+  events,
+  languageBreakdown,
+}: {
+  report: Report | null;
+  events: EventItem[];
+  languageBreakdown: Record<string, number>;
+}) {
+  const article = report?.daily_article ?? null;
+  const articleGeneratedAt = article?.generated_at || report?.generated_at;
+
+  if (!article) {
+    return (
+      <article className="panel reportPanel">
+        <div className="panelHeader">
+          <div>
+            <p className="eyebrow">最新日报</p>
+            <h2>{report?.report_date ?? "暂无日报"}</h2>
+          </div>
+          <span className="pill">{report?.generated_at ? formatDate(report.generated_at) : "等待生成"}</span>
+        </div>
+        <p className="summary">{report ? chineseExecutiveSummary(report, events) : "生成日报后，这里会展示中文文章。"}</p>
+        <SourceBreakdown report={report} languageBreakdown={languageBreakdown} />
+      </article>
+    );
+  }
+
+  return (
+    <article className="panel reportPanel dailyArticle">
+      <div className="articleMetaRow">
+        <div>
+          <p className="eyebrow">最新日报</p>
+          <span>{report?.report_date ?? "今日"}</span>
+        </div>
+        <span className="pill">{articleGeneratedAt ? formatDate(articleGeneratedAt) : "等待生成"}</span>
+      </div>
+
+      <header className="articleHeader">
+        <h2>{article.title}</h2>
+        {article.subtitle ? <p>{article.subtitle}</p> : null}
+      </header>
+
+      <p className="articleLead">{article.lead}</p>
+
+      <div className="articleBody">
+        {(article.body_sections ?? []).map((section, index) => (
+          <section className="articleSection" key={`${section.heading}-${index}`}>
+            <div className="sectionTitleRow">
+              <h3>{section.heading}</h3>
+              <span className="evidenceBadge">证据 {section.evidence_source_item_ids.length}</span>
+            </div>
+            <p>{section.content}</p>
+          </section>
+        ))}
+        {article.body_sections?.length ? null : <p className="muted">正文段落生成中。</p>}
+      </div>
+
+      <section className="articleConclusion">
+        <div>
+          <h3>趋势判断</h3>
+          <p>{article.trend_outlook}</p>
+        </div>
+        <div>
+          <h3>风险与机会</h3>
+          <p>{article.risk_opportunity}</p>
+        </div>
+      </section>
+
+      <footer className="articleFooter">
+        <span className="evidenceBadge">全文证据 {article.evidence_source_item_ids.length}</span>
+        <span>生成方式：{generationLabel(article.generated_by)}</span>
+      </footer>
+
+      <SourceBreakdown report={report} languageBreakdown={languageBreakdown} />
+    </article>
+  );
+}
+
+function SourceBreakdown({
+  report,
+  languageBreakdown,
+}: {
+  report: Report | null;
+  languageBreakdown: Record<string, number>;
+}) {
+  const sourceEntries = Object.entries(report?.source_breakdown ?? {});
+  const languageEntries = Object.entries(languageBreakdown);
+
+  if (!sourceEntries.length && !languageEntries.length) {
+    return null;
+  }
+
+  return (
+    <div className="breakdown sourceMetaBreakdown">
+      {sourceEntries.map(([name, count]) => (
+        <span key={name}>
+          {sourceTypeLabel(name)}：<strong>{count}</strong>
+        </span>
+      ))}
+      {languageEntries.map(([name, count]) => (
+        <span key={name}>
+          {name}来源：<strong>{count}</strong>
+        </span>
+      ))}
+    </div>
   );
 }
 
@@ -712,6 +820,15 @@ function trendDirectionLabel(value: string) {
     capital: "资本方向",
   };
   return labels[value] ?? value;
+}
+
+function generationLabel(value?: string) {
+  const labels: Record<string, string> = {
+    rule_based: "规则生成",
+    llm: "大模型生成",
+    hybrid: "混合生成",
+  };
+  return labels[value ?? ""] ?? value ?? "未知";
 }
 
 function formatScore(value?: number) {

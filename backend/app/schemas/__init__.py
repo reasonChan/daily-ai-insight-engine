@@ -22,10 +22,13 @@ from .daily_analysis import (
     RiskOpportunityNote,
     TrendJudgment,
 )
+from .daily_article import ArticleSection, DailyArticle
 
 __all__ = [
     "CollectionSummary",
+    "ArticleSection",
     "DailyAnalysis",
+    "DailyArticle",
     "DailyReport",
     "DeduplicationMetadata",
     "Event",
